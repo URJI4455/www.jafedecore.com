@@ -7,28 +7,19 @@ require('dotenv').config();
 const app = express();
 
 // ==========================================
-// 1. SECURITY & CORS (Fixes the 405 Error)
+// 1. SECURITY & CORS (Fixes 405 Errors)
 // ==========================================
-// Explicitly allow all origins and methods
-app.use(cors({
-    origin: '*', 
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Manually answer the browser's "OPTIONS" preflight check
-app.options('*', cors()); 
+app.use(cors({ origin: '*' }));
+app.options('*', cors()); // Manually answer browser Pre-flight checks
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
-// 2. DATABASE CONNECTION (Vercel Serverless)
+// 2. DATABASE CONNECTION
 // ==========================================
 const connectDB = async () => {
-    if (mongoose.connections[0].readyState) {
-        return;
-    }
+    if (mongoose.connections[0].readyState) return;
     try {
         if (!process.env.MONGO_URI) {
             console.error('❌ MONGO_URI is missing!');
@@ -41,8 +32,8 @@ const connectDB = async () => {
     }
 };
 
-// Connect to DB before every API request
-app.use('/api', async (req, res, next) => {
+// Ensure DB is connected before any /backend route
+app.use('/backend', async (req, res, next) => {
     await connectDB();
     next();
 });
@@ -91,26 +82,58 @@ const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', new mong
 }, { timestamps: true }));
 
 // ==========================================
-// 4. API ENDPOINTS
+// 4. API ENDPOINTS (Renamed to /backend to bypass Vercel restrictions)
 // ==========================================
-app.get('/api/ping', (req, res) => res.status(200).json({ message: "Server is awake!" }));
+app.get('/backend/ping', (req, res) => res.status(200).json({ message: "Server awake!" }));
 
-// REGISTER
-app.post('/api/register', async (req, res) => {
+app.post('/backend/register', async (req, res) => {
     try {
         const existingUser = await User.findOne({ phone: req.body.phone });
-        if (existingUser) return res.status(400).json({ success: false, message: "Phone number already registered." });
+        if (existingUser) return res.status(400).json({ success: false, message: "Phone already registered." });
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
-        const newUser = new User({ ...req.body, password: hashedPassword });
-        await newUser.save();
-        res.status(201).json({ success: true, message: "Registration successful" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Server Error", error: err.message });
-    }
+        await new User({ ...req.body, password: hashedPassword }).save();
+        res.status(201).json({ success: true });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
+
+app.post('/backend/login', async (req, res) => {
+    try {
+        const user = await User.findOne({ phone: req.body.phone });
+        if (!user) return res.status(401).json({ success: false, message: "Invalid credentials." });
+
+        const isMatch = await bcrypt.compare(req.body.password, user.password);
+        if (isMatch) res.status(200).json({ success: true });
+        else res.status(401).json({ success: false, message: "Invalid credentials." });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.post('/backend/submit-booking', async (req, res) => {
+    try { await new Booking(req.body).save(); res.status(201).json({ success: true }); } 
+    catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.post('/backend/submit-contact', async (req, res) => {
+    try { await new Contact(req.body).save(); res.status(201).json({ success: true }); } 
+    catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.post('/backend/submit-affiliate', async (req, res) => {
+    try { await new Affiliate(req.body).save(); res.status(201).json({ success: true }); } 
+    catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.post('/backend/submit-feedback', async (req, res) => {
+    try { await new Feedback(req.body).save(); res.status(201).json({ success: true }); } 
+    catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// Fallback
+app.use((req, res) => res.status(404).json({ success: false, message: "Endpoint not found" }));
+
+module.exports = app;});
 
 // LOGIN
 app.post('/api/login', async (req, res) => {
