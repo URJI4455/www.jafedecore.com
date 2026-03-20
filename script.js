@@ -1,3 +1,9 @@
+/**
+ * JAFE DECOR - Official Script
+ * Updated: March 2026
+ * Backend: Vercel (MongoDB Atlas)
+ */
+
 const API_BASE_URL = 'https://jafedecore.vercel.app';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const updateCount = () => {
                         const target = +counter.getAttribute('data-target');
                         const count = +counter.innerText;
-                        // Calculate increment
                         const inc = target / speed;
                         
                         if (count < target) {
@@ -39,10 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     };
                     updateCount();
-                    observeCounters.unobserve(counter); // Stop observing once counted
+                    observeCounters.unobserve(counter);
                 }
             });
-        }, { threshold: 0.5 }); // Trigger when 50% visible
+        }, { threshold: 0.5 });
         
         counters.forEach(c => observeCounters.observe(c));
     }
@@ -51,41 +56,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. FAQ Accordion Logic
     // ==========================================
     const faqItems = document.querySelectorAll('.faq-question');
-    
     if(faqItems.length > 0) {
         faqItems.forEach(item => {
             item.addEventListener('click', () => {
                 const parent = item.parentElement;
                 const answer = item.nextElementSibling;
-                
-                // Close other open faqs
                 document.querySelectorAll('.faq-item').forEach(faq => {
                     if(faq !== parent) {
                         faq.classList.remove('active');
                         faq.querySelector('.faq-answer').style.maxHeight = null;
-                        if(faq.querySelector('.fas')) {
-                            faq.querySelector('.fas').classList.replace('fa-minus', 'fa-plus');
-                        }
                     }
                 });
-
-                // Toggle current FAQ
                 parent.classList.toggle('active');
-                const icon = item.querySelector('.fas');
-                
-                if (parent.classList.contains('active')) {
-                    answer.style.maxHeight = answer.scrollHeight + "px";
-                    if(icon) icon.classList.replace('fa-plus', 'fa-minus');
-                } else {
-                    answer.style.maxHeight = null;
-                    if(icon) icon.classList.replace('fa-minus', 'fa-plus');
-                }
+                answer.style.maxHeight = parent.classList.contains('active') ? answer.scrollHeight + "px" : null;
             });
         });
     }
 
     // ==========================================
-    // 4. Gallery Filtering System
+    // 4. Gallery & Read More
     // ==========================================
     const filterBtns = document.querySelectorAll('.filter-btn');
     const galleryItems = document.querySelectorAll('.gallery-item');
@@ -93,335 +82,154 @@ document.addEventListener('DOMContentLoaded', () => {
     if(filterBtns.length > 0) {
         filterBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                // Remove active class from all buttons
                 filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active'); // Add to clicked button
-                
+                btn.classList.add('active');
                 const filterValue = btn.getAttribute('data-filter');
-                
-                // Filter the gallery items
                 galleryItems.forEach(item => {
-                    if(filterValue === 'all' || item.classList.contains(filterValue)) {
-                        item.classList.add('show');
-                    } else {
-                        item.classList.remove('show');
-                    }
+                    item.classList.toggle('show', filterValue === 'all' || item.classList.contains(filterValue));
                 });
             });
         });
-        
-        // Trigger default filter on page load
-        const defaultFilter = document.querySelector('.filter-btn[data-filter="all"]');
-        if(defaultFilter) defaultFilter.click();
     }
 
-    // ==========================================
-    // 5. Gallery Read More / Read Less Toggle
-    // ==========================================
     const readMoreBtns = document.querySelectorAll('.read-more-btn');
-
-    if (readMoreBtns.length > 0) {
-        readMoreBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Find the hidden text span inside this specific card
-                const cardContent = this.parentElement;
-                const moreText = cardContent.querySelector('.more-text');
-
-                // Toggle visibility
-                if (moreText.classList.contains('show')) {
-                    moreText.classList.remove('show');
-                    this.innerText = 'Read More';
-                } else {
-                    moreText.classList.add('show');
-                    this.innerText = 'Read Less';
-                }
-            });
+    readMoreBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const moreText = this.parentElement.querySelector('.more-text');
+            moreText.classList.toggle('show');
+            this.innerText = moreText.classList.contains('show') ? 'Read Less' : 'Read More';
         });
-    }
+    });
 
     // ==========================================
-    // 6. Interactive Star Rating for Feedback Form
+    // 5. Star Rating Logic
     // ==========================================
     const stars = document.querySelectorAll('.star-rating .fa-star');
     const ratingValue = document.getElementById('ratingValue');
 
-    if (stars.length > 0) {
-        stars.forEach(star => {
-            star.addEventListener('click', function() {
-                let value = this.getAttribute('data-val');
-                ratingValue.value = value;
-                
-                stars.forEach(s => s.classList.remove('active'));
-                
-                stars.forEach(s => {
-                    if (s.getAttribute('data-val') <= value) {
-                        s.classList.add('active');
-                    }
-                });
-            });
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            let val = this.getAttribute('data-val');
+            ratingValue.value = val;
+            stars.forEach(s => s.classList.toggle('active', s.getAttribute('data-val') <= val));
         });
-    }
+    });
 
-    // Feedback Form Submission
-    const feedbackForm = document.getElementById('feedbackForm');
-    const feedbackSuccess = document.getElementById('feedbackSuccess');
-if (feedbackForm) {
-    feedbackForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        if (!ratingValue.value) {
-            alert("Please select a star rating!");
-            return;
-        }
+    // ==========================================
+    // 6. REAL DATA SUBMISSIONS (API FETCH)
+    // ==========================================
 
-        const feedbackData = {
-            rating: ratingValue.value,
-            comment: feedbackForm.querySelector('textarea').value
-        };
-
+    // Helper function for reusable Fetch logic
+    async function postData(endpoint, data, formElement, successElement) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/feedback`, {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(feedbackData)
+                body: JSON.stringify(data)
             });
 
             if (response.ok) {
-                feedbackForm.style.display = 'none';
-                feedbackSuccess.style.display = 'block';
+                formElement.style.display = 'none';
+                if(successElement) successElement.style.display = 'block';
+                return true;
+            } else {
+                const err = await response.json();
+                alert("Error: " + (err.message || "Submission failed"));
             }
-        } catch (err) {
-            alert("Error saving feedback. Check connection.");
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            alert("Server connection failed. Is your Vercel backend live?");
         }
-    });
-}
-
-
-    // ==========================================
-    // 7. Authentication (Login/Register Forms)
-    // ==========================================
-    
-    // Toggle Password Visibility
-    const togglePasswords = document.querySelectorAll('.toggle-password');
-    if(togglePasswords.length > 0) {
-        togglePasswords.forEach(icon => {
-            icon.addEventListener('click', function() {
-                const input = this.previousElementSibling;
-                if(input.type === 'password') {
-                    input.type = 'text';
-                    this.classList.replace('fa-eye', 'fa-eye-slash');
-                } else {
-                    input.type = 'password';
-                    this.classList.replace('fa-eye-slash', 'fa-eye');
-                }
-            });
-        });
+        return false;
     }
 
-    // Validate Ethiopian Phone Numbers (+2519...)
-    const phoneInputs = document.querySelectorAll('input[type="tel"]');
-    if(phoneInputs.length > 0) {
-        phoneInputs.forEach(input => {
-            input.addEventListener('input', function() {
-                const errorMsg = this.nextElementSibling;
-                const isValid = /^\+2519\d{8}$/.test(this.value);
-                
-                if(this.value.length > 0) {
-                    this.style.borderColor = isValid ? '#2e7d32' : 'red'; // Green if valid, Red if invalid
-                    if(errorMsg && errorMsg.classList.contains('phone-error')) {
-                        errorMsg.style.display = isValid ? 'none' : 'block';
-                    }
-                } else {
-                    this.style.borderColor = '#ddd'; // Reset if empty
-                    if(errorMsg && errorMsg.classList.contains('phone-error')) errorMsg.style.display = 'none';
-                }
-            });
-        });
-    }
-
-    // Process Mock Login
-    const loginForm = document.getElementById('loginForm');
-    if(loginForm) {
-        loginForm.addEventListener('submit', function(e) {
+    // FEEDBACK SUBMISSION
+    const feedbackForm = document.getElementById('feedbackForm');
+    if (feedbackForm) {
+        feedbackForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const phone = document.getElementById('login_phone').value;
-            if(!/^\+2519\d{8}$/.test(phone)) {
-                alert('Please enter a valid Ethiopian phone number (+2519...)');
-                return;
-            }
-            // Mock Login: Set login state & redirect to booking
-            localStorage.setItem('jafe_logged_in', 'true');
-            window.location.href = 'booking.html';
+            const data = {
+                rating: document.getElementById('ratingValue').value,
+                comment: feedbackForm.querySelector('textarea').value
+            };
+            await postData('/api/feedback', data, feedbackForm, document.getElementById('feedbackSuccess'));
         });
     }
 
-    // Process Mock Register
-    const registerForm = document.getElementById('registerForm');
-    if(registerForm) {
-        registerForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const phone = document.getElementById('reg_phone').value;
-            if(!/^\+2519\d{8}$/.test(phone)) {
-                alert('Please enter a valid Ethiopian phone number (+2519...)');
-                return;
-            }
-            // Mock Register: Set login state & redirect to booking
-            localStorage.setItem('jafe_logged_in', 'true');
-            window.location.href = 'booking.html';
-        });
-    }
-
-    // ==========================================
-    // 8. Booking Form Logic & Auth Protection
-    // ==========================================
-    
-    const bookingForm = document.getElementById('bookingForm');
-    
-    if (bookingForm) {
-        // --- 8a. Check Authentication ---
-        const isLoggedIn = localStorage.getItem('jafe_logged_in') === 'true';
-        
-        if(!isLoggedIn) {
-            // Replace form with secure login prompt if not logged in
-            const container = bookingForm.parentElement;
-            container.innerHTML = `
-                <div style="text-align: center; padding: 50px 20px; background: #fff; border-radius: 8px; border-left: 5px solid var(--brand-red); box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
-                    <i class="fas fa-lock" style="font-size: 50px; color: #888; margin-bottom: 20px;"></i>
-                    <h3 style="font-size: 24px; margin-bottom: 15px;">Authentication Required</h3>
-                    <p style="color: #555; margin-bottom: 30px;">You must have a registered account to book an event with Jafe Decor. Please log in or register to secure your date.</p>
-                    <div>
-                        <a href="login.html" class="btn btn-primary" style="margin: 5px;">Secure Login</a>
-                        <a href="register.html" class="btn btn-outline" style="margin: 5px; border: 1px solid var(--brand-red); color: var(--brand-red); padding: 12px 30px; border-radius: 5px; text-decoration: none; font-weight: 600; display: inline-block;">Register Account</a>
-                    </div>
-                </div>
-            `;
-        } else {
-            // --- 8b. Date Validation (Prevent Past Dates) ---
-            const dateInput = document.getElementById('date');
-            if (dateInput) {
-                const today = new Date();
-                const yyyy = today.getFullYear();
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const dd = String(today.getDate()).padStart(2, '0');
-                const formattedToday = `${yyyy}-${mm}-${dd}`;
-                dateInput.min = formattedToday;
-            }
-
-            // --- 8c. Booking Form Submission Mock ---
-            bookingForm.addEventListener('submit', async function(e) {
-    e.preventDefault(); 
-    submitBtn.innerText = 'Processing Request...';
-    submitBtn.disabled = true;
-
-    // Collect data from your form fields
-    const formData = {
-        name: document.getElementById('name').value,
-        phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        event_type: document.getElementById('event_type').value,
-        date: document.getElementById('date').value,
-        message: document.getElementById('message').value
-    };
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/booking`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
-
-        if (response.ok) {
-            bookingForm.style.display = 'none';
-            if(successMessage) {
-                successMessage.style.display = 'block';
-                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        } else {
-            alert("Submission failed. Please try again.");
-            submitBtn.innerText = 'Submit Booking';
-            submitBtn.disabled = false;
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        alert("Server error. Check your Vercel logs!");
-    }
-});
-
-
-    // ==========================================
-    // 9. General Forms (Contact & Affiliate)
-    // ==========================================
-    
-    // Contact Form Logic
+    // CONTACT SUBMISSION
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
-        if (contactForm) {
-    contactForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const contactData = {
-            name: contactForm.querySelector('input[name="name"]')?.value || "Guest",
-            email: contactForm.querySelector('input[name="email"]')?.value,
-            message: contactForm.querySelector('textarea[name="message"]')?.value
-        };
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: contactForm.querySelector('[name="name"]').value,
+                email: contactForm.querySelector('[name="email"]').value,
+                message: contactForm.querySelector('[name="message"]').value
+            };
+            await postData('/api/contact', data, contactForm, null); // Add custom success box logic if needed
+        });
+    }
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/contact`, {
+    // AFFILIATE SUBMISSION
+    const affiliateForm = document.getElementById('affiliateForm');
+    if (affiliateForm) {
+        affiliateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                full_name: affiliateForm.querySelector('[name="full_name"]').value,
+                phone: affiliateForm.querySelector('[name="phone"]').value,
+                social_link: affiliateForm.querySelector('[name="social_link"]').value
+            };
+            await postData('/api/affiliate', data, affiliateForm, null);
+        });
+    }
+
+    // LOGIN SUBMISSION
+    const loginForm = document.getElementById('loginForm');
+    if(loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const phone = document.getElementById('login_phone').value;
+            const password = document.getElementById('login_password')?.value;
+
+            const response = await fetch(`${API_BASE_URL}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(contactData)
+                body: JSON.stringify({ phone, password })
             });
 
-            if (response.ok) {
-                contactForm.style.display = 'none';
-                const contactSuccessBox = document.createElement('div');
-                contactSuccessBox.className = 'success-box';
-                contactSuccessBox.style.cssText = 'padding: 40px 20px; text-align: center; border: 1px solid #ddd; border-radius: 8px; background-color: #fcfcfc;';
-                contactSuccessBox.innerHTML = `
-                    <i class="fas fa-paper-plane" style="font-size: 50px; color: var(--brand-red); margin-bottom: 20px;"></i>
-                    <h3 style="color: var(--bg-dark); margin-bottom: 15px; font-size: 24px;">Message Sent!</h3>
-                    <p>We have received your message and will contact you soon.</p>
-                `;
-                contactForm.parentNode.appendChild(contactSuccessBox);
+            if(response.ok) {
+                localStorage.setItem('jafe_logged_in', 'true');
+                window.location.href = 'booking.html';
+            } else {
+                alert("Invalid Login. Please register if you don't have an account.");
             }
-        } catch (err) {
-            alert("Could not send message. Try again later.");
-        }
-    });
-}
+        });
+    }
 
+    // BOOKING SUBMISSION
+    const bookingForm = document.getElementById('bookingForm');
+    if (bookingForm) {
+        const isLoggedIn = localStorage.getItem('jafe_logged_in') === 'true';
+        if(!isLoggedIn) {
+            bookingForm.parentElement.innerHTML = `<div class="auth-notice"><h3>Please Login to Book</h3><a href="login.html" class="btn">Login Now</a></div>`;
+        } else {
+            bookingForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.innerText = 'Processing...';
 
-    // Affiliate Form Logic
-    const affiliateForm = document.getElementById('affiliateForm'); 
-if (affiliateForm) {
-    affiliateForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const affiliateData = {
-            full_name: affiliateForm.querySelector('input[name="full_name"]')?.value,
-            phone: affiliateForm.querySelector('input[name="phone"]')?.value,
-            social_link: affiliateForm.querySelector('input[name="social_link"]')?.value
-        };
+                const data = {
+                    name: document.getElementById('name').value,
+                    phone: document.getElementById('phone').value,
+                    event_type: document.getElementById('event_type').value,
+                    date: document.getElementById('date').value,
+                    message: document.getElementById('message').value
+                };
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/affiliate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(affiliateData)
+                const success = await postData('/api/booking', data, bookingForm, document.getElementById('successMessage'));
+                if(!success) submitBtn.innerText = 'Submit Booking';
             });
-
-            if (response.ok) {
-                affiliateForm.style.display = 'none';
-                const affiliateSuccessBox = document.createElement('div');
-                affiliateSuccessBox.style.cssText = 'border: 3px solid var(--brand-red); padding: 40px 20px; text-align: center; border-radius: 8px; background-color: #fffafa;';
-                affiliateSuccessBox.innerHTML = `
-                    <h3 style="color: var(--brand-red); margin-bottom: 15px; font-size: 28px;">Congratulations! 🎊</h3>
-                    <p>Your affiliate application has been submitted successfully!</p>
-                `;
-                affiliateForm.parentNode.appendChild(affiliateSuccessBox);
-            }
-        } catch (err) {
-            alert("Affiliate registration failed. Please check your internet.");
         }
-    });
-}
+    }
+});
