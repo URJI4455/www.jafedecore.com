@@ -2,33 +2,36 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs'); 
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
 
 // ==========================================
-// 1. SECURITY & MIDDLEWARE
+// 1. SECURITY & CORS (Fixes the 405 Error)
 // ==========================================
-// Allow all origins (prevents CORS blocking on Vercel domains)
-app.use(cors());
+// Explicitly allow all origins and methods
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Manually answer the browser's "OPTIONS" preflight check
+app.options('*', cors()); 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve Static Frontend Files (HTML, CSS, JS, Images)
-app.use(express.static(path.join(__dirname, '/')));
-
 // ==========================================
-// 2. DATABASE CONNECTION (Optimized for Vercel)
+// 2. DATABASE CONNECTION (Vercel Serverless)
 // ==========================================
 const connectDB = async () => {
     if (mongoose.connections[0].readyState) {
-        console.log('🌵 Using existing MongoDB connection');
         return;
     }
     try {
         if (!process.env.MONGO_URI) {
-            console.error('❌ MONGO_URI is missing in Vercel Environment Variables!');
+            console.error('❌ MONGO_URI is missing!');
             return;
         }
         await mongoose.connect(process.env.MONGO_URI);
@@ -38,15 +41,14 @@ const connectDB = async () => {
     }
 };
 
-// Middleware to ensure Database connects BEFORE processing any /api/ route
+// Connect to DB before every API request
 app.use('/api', async (req, res, next) => {
     await connectDB();
     next();
 });
 
 // ==========================================
-// 3. MONGODB SCHEMAS 
-// (Using mongoose.models to prevent Vercel Overwrite Errors)
+// 3. MONGODB SCHEMAS
 // ==========================================
 const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
     first_name: { type: String, required: true },
@@ -89,11 +91,11 @@ const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', new mong
 }, { timestamps: true }));
 
 // ==========================================
-// 4. API ENDPOINTS (Routes)
+// 4. API ENDPOINTS
 // ==========================================
 app.get('/api/ping', (req, res) => res.status(200).json({ message: "Server is awake!" }));
 
-// 🔒 SECURE REGISTER
+// REGISTER
 app.post('/api/register', async (req, res) => {
     try {
         const existingUser = await User.findOne({ phone: req.body.phone });
@@ -110,7 +112,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// 🔒 SECURE LOGIN
+// LOGIN
 app.post('/api/login', async (req, res) => {
     try {
         const { phone, password } = req.body;
@@ -119,13 +121,13 @@ app.post('/api/login', async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (isMatch) res.status(200).json({ success: true, message: "Login successful" });
-        else res.status(401).json({ success: false, message: "Invalid phone number or password." });
+        else res.status(401).json({ success: false, message: "Invalid credentials." });
     } catch (err) {
         res.status(500).json({ success: false, message: "Server error", error: err.message });
     }
 });
 
-// Submit Booking
+// BOOKING
 app.post('/api/submit-booking', async (req, res) => {
     try {
         await new Booking(req.body).save();
@@ -135,7 +137,7 @@ app.post('/api/submit-booking', async (req, res) => {
     }
 });
 
-// Submit Contact
+// CONTACT
 app.post('/api/submit-contact', async (req, res) => {
     try {
         await new Contact(req.body).save();
@@ -145,7 +147,7 @@ app.post('/api/submit-contact', async (req, res) => {
     }
 });
 
-// Submit Affiliate
+// AFFILIATE
 app.post('/api/submit-affiliate', async (req, res) => {
     try {
         await new Affiliate(req.body).save();
@@ -155,7 +157,7 @@ app.post('/api/submit-affiliate', async (req, res) => {
     }
 });
 
-// Submit Feedback
+// FEEDBACK
 app.post('/api/submit-feedback', async (req, res) => {
     try {
         await new Feedback(req.body).save();
@@ -165,18 +167,9 @@ app.post('/api/submit-feedback', async (req, res) => {
     }
 });
 
-// Catch-all route to prevent 404s when manually typing URLs in browser
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+// Catch-all to prevent HTML responses when API endpoints are missing
+app.use((req, res) => {
+    res.status(404).json({ success: false, message: "API endpoint not found" });
 });
 
-// ==========================================
-// 5. START SERVER / VERCEL EXPORT
-// ==========================================
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`🚀 Local Server running on port ${PORT}`));
-}
-
-// Crucial step for Vercel mapping 
 module.exports = app;
