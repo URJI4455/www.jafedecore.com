@@ -165,18 +165,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // Feedback Form Submission
     const feedbackForm = document.getElementById('feedbackForm');
     const feedbackSuccess = document.getElementById('feedbackSuccess');
+if (feedbackForm) {
+    feedbackForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!ratingValue.value) {
+            alert("Please select a star rating!");
+            return;
+        }
 
-    if (feedbackForm) {
-        feedbackForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (!ratingValue.value) {
-                alert("Please select a star rating!");
-                return;
+        const feedbackData = {
+            rating: ratingValue.value,
+            comment: feedbackForm.querySelector('textarea').value
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/feedback`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(feedbackData)
+            });
+
+            if (response.ok) {
+                feedbackForm.style.display = 'none';
+                feedbackSuccess.style.display = 'block';
             }
-            feedbackForm.style.display = 'none';
-            feedbackSuccess.style.display = 'block';
-        });
-    }
+        } catch (err) {
+            alert("Error saving feedback. Check connection.");
+        }
+    });
+}
+
 
     // ==========================================
     // 7. Authentication (Login/Register Forms)
@@ -289,26 +308,45 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // --- 8c. Booking Form Submission Mock ---
-            const successMessage = document.getElementById('successMessage');
-            const submitBtn = document.getElementById('submitBtn');
+            bookingForm.addEventListener('submit', async function(e) {
+    e.preventDefault(); 
+    submitBtn.innerText = 'Processing Request...';
+    submitBtn.disabled = true;
 
-            bookingForm.addEventListener('submit', function(e) {
-                e.preventDefault(); 
-                submitBtn.innerText = 'Processing Request...';
-                submitBtn.style.opacity = '0.7';
-                submitBtn.style.cursor = 'not-allowed';
-                submitBtn.disabled = true;
+    // Collect data from your form fields
+    const formData = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        event_type: document.getElementById('event_type').value,
+        date: document.getElementById('date').value,
+        message: document.getElementById('message').value
+    };
 
-                setTimeout(() => {
-                    bookingForm.style.display = 'none';
-                    if(successMessage) {
-                        successMessage.style.display = 'block';
-                        successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }, 1500); 
-            });
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/booking`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            bookingForm.style.display = 'none';
+            if(successMessage) {
+                successMessage.style.display = 'block';
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else {
+            alert("Submission failed. Please try again.");
+            submitBtn.innerText = 'Submit Booking';
+            submitBtn.disabled = false;
         }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Server error. Check your Vercel logs!");
     }
+});
+
 
     // ==========================================
     // 9. General Forms (Contact & Affiliate)
@@ -317,40 +355,73 @@ document.addEventListener('DOMContentLoaded', () => {
     // Contact Form Logic
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            contactForm.style.display = 'none';
-            
-            const contactSuccessBox = document.createElement('div');
-            contactSuccessBox.className = 'success-box';
-            contactSuccessBox.style.cssText = 'padding: 40px 20px; text-align: center; border: 1px solid #ddd; border-radius: 8px; background-color: #fcfcfc; animation: fadeIn 0.5s ease-in-out;';
-            contactSuccessBox.innerHTML = `
-                <i class="fas fa-paper-plane" style="font-size: 50px; color: var(--brand-red); margin-bottom: 20px;"></i>
-                <h3 style="color: var(--bg-dark); margin-bottom: 15px; font-size: 24px;">Message Sent Successfully!</h3>
-                <p style="color: #555; font-size: 16px; margin-bottom: 0;">Thank you for reaching out to Jafe Decor. We have received your message and one of our event specialists will contact you very soon.</p>
-            `;
-            contactForm.parentNode.appendChild(contactSuccessBox);
-        });
-    }
+        if (contactForm) {
+    contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const contactData = {
+            name: contactForm.querySelector('input[name="name"]')?.value || "Guest",
+            email: contactForm.querySelector('input[name="email"]')?.value,
+            message: contactForm.querySelector('textarea[name="message"]')?.value
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/contact`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(contactData)
+            });
+
+            if (response.ok) {
+                contactForm.style.display = 'none';
+                const contactSuccessBox = document.createElement('div');
+                contactSuccessBox.className = 'success-box';
+                contactSuccessBox.style.cssText = 'padding: 40px 20px; text-align: center; border: 1px solid #ddd; border-radius: 8px; background-color: #fcfcfc;';
+                contactSuccessBox.innerHTML = `
+                    <i class="fas fa-paper-plane" style="font-size: 50px; color: var(--brand-red); margin-bottom: 20px;"></i>
+                    <h3 style="color: var(--bg-dark); margin-bottom: 15px; font-size: 24px;">Message Sent!</h3>
+                    <p>We have received your message and will contact you soon.</p>
+                `;
+                contactForm.parentNode.appendChild(contactSuccessBox);
+            }
+        } catch (err) {
+            alert("Could not send message. Try again later.");
+        }
+    });
+}
+
 
     // Affiliate Form Logic
     const affiliateForm = document.getElementById('affiliateForm'); 
-    if (affiliateForm) {
-        affiliateForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            affiliateForm.style.display = 'none';
-            
-            const affiliateSuccessBox = document.createElement('div');
-            affiliateSuccessBox.className = 'success-box';
-            affiliateSuccessBox.style.cssText = 'border: 3px solid var(--brand-red); padding: 40px 20px; text-align: center; border-radius: 8px; background-color: #fffafa; animation: fadeIn 0.5s ease-in-out;';
-            affiliateSuccessBox.innerHTML = `
-                <h3 style="color: var(--brand-red); margin-bottom: 15px; font-size: 28px; font-weight: 700;">Congratulations! 🎊</h3>
-                <p style="color: #333; font-size: 16px; margin-bottom: 20px;">Your affiliate application has been successfully submitted. Welcome to the Jafe Decor family!</p>
-                <p style="color: #555; font-size: 15px;">Our team will review your details and send your personalized onboarding packet and referral links to your email shortly.</p>
-            `;
-            affiliateForm.parentNode.appendChild(affiliateSuccessBox);
-        });
-    }
+if (affiliateForm) {
+    affiliateForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const affiliateData = {
+            full_name: affiliateForm.querySelector('input[name="full_name"]')?.value,
+            phone: affiliateForm.querySelector('input[name="phone"]')?.value,
+            social_link: affiliateForm.querySelector('input[name="social_link"]')?.value
+        };
 
-});
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/affiliate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(affiliateData)
+            });
 
+            if (response.ok) {
+                affiliateForm.style.display = 'none';
+                const affiliateSuccessBox = document.createElement('div');
+                affiliateSuccessBox.style.cssText = 'border: 3px solid var(--brand-red); padding: 40px 20px; text-align: center; border-radius: 8px; background-color: #fffafa;';
+                affiliateSuccessBox.innerHTML = `
+                    <h3 style="color: var(--brand-red); margin-bottom: 15px; font-size: 28px;">Congratulations! 🎊</h3>
+                    <p>Your affiliate application has been submitted successfully!</p>
+                `;
+                affiliateForm.parentNode.appendChild(affiliateSuccessBox);
+            }
+        } catch (err) {
+            alert("Affiliate registration failed. Please check your internet.");
+        }
+    });
+}
