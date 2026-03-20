@@ -217,5 +217,10 @@ app.post('/api/submit-feedback', async (req, res) => {
 // ==========================================
 // 5. START SERVER
 // ==========================================
+
+app.get('/', (req, res) => {
+  res.send('Jafe Decor Backend API is live and running!');
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
