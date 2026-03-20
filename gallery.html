@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Gallery | Jafe Decor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header> <div class="nav-container">
+            <a href="index.html" class="brand-logo">
+                <img src="j-logo.png" alt="Jafe Decor Logo" class="logo-img">
+                <div class="logo-text">
+                    <span class="text-white">Jafe</span><span class="text-red">Decor</span>
+                </div>
+            </a>
+            
+            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+            
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="affiliate.html">Affiliates</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li class="mobile-only"><a href="login.html"><i class="fas fa-user"></i> Login</a></li>
+                <li class="mobile-only"><a href="booking.html" class="text-red">Book Now</a></li>
+            </ul>
+            
+            <div class="header-actions desktop-only" style="display: flex; gap: 15px; align-items: center;">
+                <a href="login.html" style="color: var(--white); font-weight: 500;"><i class="fas fa-user"></i> Login</a>
+                <a href="booking.html" class="btn btn-primary">Book Now</a>
+            </div>
+        </div></header>
+
+    <section class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Our Masterpieces</h2>
+            
+            <!-- Filter System -->
+            <div class="gallery-filters">
+                <button class="filter-btn active" data-filter="all">All Events</button>
+                <button class="filter-btn" data-filter="wedding">Weddings</button>
+                <button class="filter-btn" data-filter="corporate">Gov / Corporate</button>
+                <button class="filter-btn" data-filter="birthday">Birthdays</button>
+                <button class="filter-btn" data-filter="graduation">Graduations</button>
+            </div>
+
+            <!-- Gallery Grid -->
+            <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+                
+                <div class="gallery-card gallery-item wedding show">
+                    <img src="galleryw1.jpg" alt="Wedding Setup">
+                    <div class="gallery-card-content">
+                        <h3>Royal Botanical Wedding</h3>
+                        <p class="event-desc">
+                            A mesmerizing floral setup providing an enchanting atmosphere for 500 guests. 
+                            <span class="more-text">Featuring hand-picked exotic orchids, customized crystal centerpieces, and a stunning 20-foot floral archway. Our team worked meticulously for 48 hours to transform the venue into a royal botanical paradise that left everyone speechless.</span>
+                        </p>
+                        <button class="btn-outline read-more-btn">Read More</button>
+                    </div>
+                </div>
+
+                <div class="gallery-card gallery-item corporate show">
+                    <img src="gallery.jpg" alt="Corporate Setup">
+                    <div class="gallery-card-content">
+                        <h3>Bank Annual Gala</h3>
+                        <p class="event-desc">
+                            High-end protocol staging featuring brand colors and executive table arrangements. 
+                            <span class="more-text">The setup included a custom LED stage backdrop, premium velvet seating for VIP guests, and synchronized ambient lighting that matched the corporate identity. Precision and elegance were the core focus of this seamless execution.</span>
+                        </p>
+                        <button class="btn-outline read-more-btn">Read More</button>
+                    </div>
+                </div>
+
+                <div class="gallery-card gallery-item birthday show">
+                    <img src="gallerygo2.jpg" alt="Birthday Setup">
+                    <div class="gallery-card-content">
+                        <h3>Golden 50th Anniversary</h3>
+                        <p class="event-desc">
+                            An elegant and intimate celebration with custom lighting and golden accents. 
+                            <span class="more-text">We curated a luxurious dining experience featuring gold-rimmed glassware, cascading fairy lights, and personalized monogrammed napkins to celebrate a half-century of beautiful memories in style.</span>
+                        </p>
+                        <button class="btn-outline read-more-btn">Read More</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+            <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <a href="index.html" class="brand-logo footer-logo">
+                        <img src="j-logo.png" alt="Jafe Decor Logo" class="logo-img">
+                        <div class="logo-text">
+                            <span class="text-white">Jafe</span><span class="text-red">Decor</span>
+                        </div>
+                    </a>
+                    <p>Experience the epitome of elegance. Jafe Decor is your premier partner in event planning and luxury decorations.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-telegram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="gallery.html">Gallery</a></li>
+                        <li><a href="booking.html">Booking</a></li>
+                        <li><a href="affiliate.html">Affiliates</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact Us</h4>
+                    <p>
+                        <i class="fas fa-map-marker-alt"></i> 
+                        <a href="https://maps.google.com/?cid=11592270079624950320" target="_blank" rel="noopener noreferrer">
+                           Bole Road, Decor Plaza, Addis Ababa
+                        </a>
+                    </p>
+                    <p>
+                        <i class="fas fa-phone"></i> 
+                        <a href="tel:+251989954455">+251989954455</a>
+                    </p>
+                    <p>
+                        <i class="fas fa-envelope"></i> 
+                        <a href="mailto:urjiabdurehman55@gmail.com">urjiabdurehman55@gmail.com</a>
+                    </p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Jafe Decor. All rights reserved.</p>
+                <div class="footer-legal">
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="terms.html">Terms & Conditions</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | Jafe Decor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <!-- ================= HEADER (Use same header block) ================= -->
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="brand-logo">
+                <img src="j-logo.png" alt="Jafe Decor Logo" class="logo-img">
+                <div class="logo-text"><span class="text-white">Jafe</span><span class="text-red">Decor</span></div>
+            </a>
+            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="affiliate.html">Affiliates</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li class="mobile-only"><a href="login.html"><i class="fas fa-user"></i> Login</a></li>
+                <li class="mobile-only"><a href="booking.html" class="text-red">Book Now</a></li>
+            </ul>
+            <div class="header-actions desktop-only" style="display: flex; gap: 15px; align-items: center;">
+                <a href="login.html" style="color: var(--white); font-weight: 500;"><i class="fas fa-user"></i> Login</a>
+                <a href="booking.html" class="btn btn-primary">Book Now</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= CONTACT SECTION ================= -->
+    <section class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            
+            <div class="grid" style="margin-bottom: 60px;">
+                <div class="card">
+                    <i class="fas fa-map-marker-alt card-icon"></i>
+                    <h3>Our Office</h3>
+                    <p style="color: #555;">Addis Ababa, Ethiopia</p>
+                    <p style="color: #555; font-weight: 500;">Bole Road, Decor Plaza</p>
+                </div>
+                
+                <div class="card">
+                    <i class="fas fa-phone-alt card-icon"></i>
+                    <h3>Call Us</h3>
+                    <p style="color: #555;">+251 989 954 455</p>
+                    <p style="color: #555;">+251 911 000 000</p>
+                </div>
+                
+                <div class="card">
+                    <i class="fas fa-envelope card-icon"></i>
+                    <h3>Email Us</h3>
+                    <p style="color: #555;">urjiabdurehman55@gmail.com</p>
+                    <p style="color: #555;">support@jafedecor.com</p>
+                </div>
+            </div>
+
+            <div class="form-container">
+                <h3 style="text-align: center; margin-bottom: 10px; font-size: 28px;">Send a Message</h3>
+                <p style="text-align: center; margin-bottom: 30px; color: #666;">Have a question or want to discuss an upcoming event? Drop us a line!</p>
+                
+                <form id="contactForm" action="/api/submit-contact" method="POST">
+                    <div class="form-group">
+                        <label for="contact_name">Full Name <span class="text-red">*</span></label>
+                        <input type="text" id="contact_name" name="contact_name" required placeholder="Enter your full name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contact_email">Email Address <span class="text-red">*</span></label>
+                        <input type="email" id="contact_email" name="contact_email" required placeholder="Enter your email address">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Your Message <span class="text-red">*</span></label>
+                        <textarea id="message" name="message" required placeholder="How can we help you make your event unforgettable?"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 16px;">
+                        <i class="fas fa-paper-plane" style="margin-right: 8px;"></i> Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= FOOTER (Use same footer block) ================= -->
+    <footer class="footer">
+            <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <a href="index.html" class="brand-logo footer-logo">
+                        <img src="j-logo.png" alt="Jafe Decor Logo" class="logo-img">
+                        <div class="logo-text">
+                            <span class="text-white">Jafe</span><span class="text-red">Decor</span>
+                        </div>
+                    </a>
+                    <p>Experience the epitome of elegance. Jafe Decor is your premier partner in event planning and luxury decorations.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-telegram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="gallery.html">Gallery</a></li>
+                        <li><a href="booking.html">Booking</a></li>
+                        <li><a href="affiliate.html">Affiliates</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact Us</h4>
+                    <p>
+                        <i class="fas fa-map-marker-alt"></i> 
+                        <a href="https://maps.google.com/?cid=11592270079624950320" target="_blank" rel="noopener noreferrer">
+                           Bole Road, Decor Plaza, Addis Ababa
+                        </a>
+                    </p>
+                    <p>
+                        <i class="fas fa-phone"></i> 
+                        <a href="tel:+251989954455">+251989954455</a>
+                    </p>
+                    <p>
+                        <i class="fas fa-envelope"></i> 
+                        <a href="mailto:urjiabdurehman55@gmail.com">urjiabdurehman55@gmail.com</a>
+                    </p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Jafe Decor. All rights reserved.</p>
+                <div class="footer-legal">
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="terms.html">Terms & Conditions</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book an Event | Jafe Decor</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="brand-logo">
+                <img src="j-logo.png" alt="Jafe Decor Logo" class="logo-img">
+                <div class="logo-text"><span class="text-white">Jafe</span><span class="text-red">Decor</span></div>
+            </a>
+            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="affiliate.html">Affiliates</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li class="mobile-only"><a href="login.html"><i class="fas fa-user"></i> Login</a></li>
+                <li class="mobile-only"><a href="booking.html" class="text-red">Book Now</a></li>
+            </ul>
+            <div class="header-actions desktop-only" style="display: flex; gap: 15px; align-items: center;">
+                <a href="login.html" style="color: var(--white); font-weight: 500;"><i class="fas fa-user"></i> Login</a>
+                <a href="booking.html" class="btn btn-primary">Book Now</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= BOOKING FORM ================= -->
+    <section class="section bg-light">
+        <h2 class="section-title">Book Your Event</h2>
+        
+        <div class="form-container">
+            <!-- Success Message Box -->
+            <div id="successMessage" class="success-box" style="display:none; text-align: center; padding: 30px;">
+                <i class="fas fa-check-circle" style="font-size: 50px; color: #2e7d32; margin-bottom: 20px;"></i>
+                <h3 style="color: #2e7d32; margin-bottom: 15px;">Booking Submitted Successfully!</h3>
+                <p style="margin-bottom: 25px;">Thank you for choosing Jafe Decor. Your event details and payment information have been securely received. Our team will contact you shortly to confirm your booking.</p>
+                <button onclick="window.location.reload()" class="btn btn-primary">Book Another Event</button>
+            </div>
+
+            <!-- Form -->
+            <form id="bookingForm" action="/api/submit-booking" method="POST">
+                <p style="text-align: center; margin-bottom: 30px; color: #555;">Fill out the form below to secure your date. We specialize in making your vision come to life.</p>
+                
+                <div class="form-group">
+                    <label for="name">Full Name / Organization <span class="text-red">*</span></label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address <span class="text-red">*</span></label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number <span class="text-red">*</span></label>
+                    <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="event_type">Event Type <span class="text-red">*</span></label>
+                    <select id="event_type" name="event_type" required>
+                        <option value="">Select Event Type</option>
+                        <option value="Wedding">Wedding</option>
+                        <option value="Gov Reception">Government Guest Reception</option>
+                        <option value="Graduation">Graduation</option>
+                        <option value="Corporate">Corporate Event</option>
+                        <option value="Birthday">Birthday / Anniversary</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date">Estimated Date of Event <span class="text-red">*</span></label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="guests">Estimated Number of Guests</label>
+                    <input type="number" id="guests" name="guests" placeholder="e.g., 200">
+                </div>
+                
+                <div class="form-group">
+                    <label for="details">Special Requirements & Details</label>
+                    <textarea id="details" name="details" placeholder="Tell us about your theme, venue, and vision..."></textarea>
+                </div>
+
+                <hr style="margin: 30px 0; border: 0; border-top: 1px solid #ddd;">
+                
+                <div class="form-group">
+                    <label for="debit_account">Debit Account Number <span class="text-red">*</span></label>
+                    <input type="text" id="debit_account" name="debit_account" required placeholder="Enter your account number (e.g. CBE, Awash, Dashen)">
+                    <small class="form-hint">
+                        <i class="fas fa-lock lock-icon"></i> * Required to secure your booking reservation.
+                    </small>
+                </div>
+
+                <div class="agreement-group">
+                    <input type="checkbox" id="terms_agree" name="terms_agree" required>
+                    <label for="terms_agree">
+                        I have read and agree to the 
+                        <a href="terms.html" target="_blank" class="legal-link">Terms & Conditions</a> 
+                        and 
+                        <a href="privacy.html" target="_blank" class="legal-link">Privacy Policy</a>.
+                    </label>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn btn-primary submit-btn">Submit Booking Request</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <a href="index.html" class="brand-logo footer-logo">
+                        <img src="j-logo.png" alt="Jafe Decor Logo" class="logo-img">
+                        <div class="logo-text"><span class="text-white">Jafe</span><span class="text-red">Decor</span></div>
+                    </a>
+                    <p>Experience the epitome of elegance. Jafe Decor is your premier partner in event planning and luxury decorations.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-telegram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="gallery.html">Gallery</a></li>
+                        <li><a href="booking.html">Booking</a></li>
+                        <li><a href="affiliate.html">Affiliates</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact Us</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> <a href="https://maps.google.com/?cid=11592270079624950320" target="_blank" rel="noopener noreferrer">Bole Road, Decor Plaza, Addis Ababa</a></p>
+                    <p><i class="fas fa-phone"></i> <a href="tel:+251989954455">+251989954455</a></p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:urjiabdurehman55@gmail.com">urjiabdurehman55@gmail.com</a></p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Jafe Decor. All rights reserved.</p>
+                <div class="footer-legal">
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="terms.html">Terms & Conditions</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
