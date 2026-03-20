@@ -1,4 +1,4 @@
-
+const API_BASE_URL = 'https://jafedecore.vercel.app';
 
 document.addEventListener('DOMContentLoaded', () => {
 
