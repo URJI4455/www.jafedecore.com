@@ -7,34 +7,41 @@ require('dotenv').config();
 const app = express();
 
 // ==========================================
-// 1. SECURITY & CORS (Fixes 405 Errors)
+// 1. SECURITY & CORS
 // ==========================================
 app.use(cors({ origin: '*' }));
-app.options('*', cors()); // Manually answer browser Pre-flight checks
-
+app.options('*', cors()); 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
-// 2. DATABASE CONNECTION
+// 2. DATABASE CRASH PROTECTION
 // ==========================================
 const connectDB = async () => {
-    if (mongoose.connections[0].readyState) return;
+    if (mongoose.connections[0].readyState) return true;
     try {
         if (!process.env.MONGO_URI) {
-            console.error('❌ MONGO_URI is missing!');
-            return;
+            console.error('❌ CRITICAL ERROR: MONGO_URI is missing in Vercel Environment Variables!');
+            return false;
         }
         await mongoose.connect(process.env.MONGO_URI);
         console.log('✅ MongoDB Atlas Connected Successfully');
+        return true;
     } catch (err) {
-        console.error('❌ MongoDB Connection Error:', err);
+        console.error('❌ MongoDB Connection Error:', err.message);
+        return false;
     }
 };
 
-// Ensure DB is connected before any /backend route
+// Check DB before processing routes
 app.use('/backend', async (req, res, next) => {
-    await connectDB();
+    const isConnected = await connectDB();
+    if (!isConnected) {
+        return res.status(500).json({ 
+            success: false, 
+            message: "Server Error: Database not connected. Check Vercel MONGO_URI settings." 
+        });
+    }
     next();
 });
 
@@ -82,9 +89,9 @@ const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', new mong
 }, { timestamps: true }));
 
 // ==========================================
-// 4. API ENDPOINTS (Renamed to /backend to bypass Vercel restrictions)
+// 4. API ENDPOINTS
 // ==========================================
-app.get('/backend/ping', (req, res) => res.status(200).json({ message: "Server awake!" }));
+app.get('/backend/ping', (req, res) => res.status(200).json({ message: "Server is online and DB connected!" }));
 
 app.post('/backend/register', async (req, res) => {
     try {
@@ -130,69 +137,6 @@ app.post('/backend/submit-feedback', async (req, res) => {
     catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// Fallback
 app.use((req, res) => res.status(404).json({ success: false, message: "Endpoint not found" }));
-
-module.exports = app;});
-
-// LOGIN
-app.post('/api/login', async (req, res) => {
-    try {
-        const { phone, password } = req.body;
-        const user = await User.findOne({ phone });
-        if (!user) return res.status(401).json({ success: false, message: "Invalid phone number or password." });
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (isMatch) res.status(200).json({ success: true, message: "Login successful" });
-        else res.status(401).json({ success: false, message: "Invalid credentials." });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Server error", error: err.message });
-    }
-});
-
-// BOOKING
-app.post('/api/submit-booking', async (req, res) => {
-    try {
-        await new Booking(req.body).save();
-        res.status(201).json({ success: true, message: "Booking received successfully" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Error submitting booking", error: err.message });
-    }
-});
-
-// CONTACT
-app.post('/api/submit-contact', async (req, res) => {
-    try {
-        await new Contact(req.body).save();
-        res.status(201).json({ success: true, message: "Message sent successfully" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Error sending message", error: err.message });
-    }
-});
-
-// AFFILIATE
-app.post('/api/submit-affiliate', async (req, res) => {
-    try {
-        await new Affiliate(req.body).save();
-        res.status(201).json({ success: true, message: "Affiliate application received" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Error submitting application", error: err.message });
-    }
-});
-
-// FEEDBACK
-app.post('/api/submit-feedback', async (req, res) => {
-    try {
-        await new Feedback(req.body).save();
-        res.status(201).json({ success: true, message: "Feedback saved successfully" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Error saving feedback", error: err.message });
-    }
-});
-
-// Catch-all to prevent HTML responses when API endpoints are missing
-app.use((req, res) => {
-    res.status(404).json({ success: false, message: "API endpoint not found" });
-});
 
 module.exports = app;
