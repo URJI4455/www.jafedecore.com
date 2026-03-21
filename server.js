@@ -105,6 +105,7 @@ app.get('/', (req, res) => res.send("<h1>✅ Jafe Decor Backend is LIVE!</h1>"))
 
 app.get('/backend/ping', (req, res) => res.status(200).json({ message: "Server is online and DB connected!" }));
 
+// REGISTER
 app.post('/backend/register', async (req, res) => {
     try {
         const existingUser = await User.findOne({ phone: req.body.phone });
@@ -116,33 +117,34 @@ app.post('/backend/register', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// LOGIN
 app.post('/backend/login', async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.body.phone });
-        if (!user) return res.status(401).json({ success: false, message: "Invalid credentials." });
+        if (!user) return res.status(401).json({ success: false, message: "Invalid phone number." });
         const isMatch = await bcrypt.compare(req.body.password, user.password);
         if (isMatch) res.status(200).json({ success: true });
-        else res.status(401).json({ success: false, message: "Invalid credentials." });
+        else res.status(401).json({ success: false, message: "Incorrect password." });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// 👉 NEW: FORGOT / RESET PASSWORD ROUTE
+// 👉 NEW: FORGOT / RESET PASSWORD
 app.post('/backend/reset-password', async (req, res) => {
     try {
         const { phone, first_name, new_password } = req.body;
         
-        // 1. Find user by phone
+        // Find user by phone
         const user = await User.findOne({ phone: phone });
         if (!user) {
             return res.status(404).json({ success: false, message: "No account found with this phone number." });
         }
 
-        // 2. Security Check: Does the first name match? (case insensitive)
+        // Security Check: Does the first name match? (case insensitive)
         if (user.first_name.toLowerCase() !== first_name.toLowerCase()) {
             return res.status(401).json({ success: false, message: "Security verification failed. First name does not match." });
         }
 
-        // 3. Hash the new password and save it
+        // Hash the new password and save it
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(new_password, salt);
         await user.save();
@@ -153,20 +155,17 @@ app.post('/backend/reset-password', async (req, res) => {
     }
 });
 
-// 👉 THE FIXED EMAIL NOTIFICATION ROUTE
+// SUBMIT BOOKING (With Email Notification)
 app.post('/backend/submit-booking', async (req, res) => {
     try { 
-        // 1. Save to Database FIRST
         await new Booking(req.body).save(); 
         
-        // 2. Draft the Email
         const mailOptions = {
             from: process.env.EMAIL_USER,
-            to: process.env.EMAIL_USER, // Sends an email to YOURSELF
+            to: process.env.EMAIL_USER, 
             subject: `🎉 NEW BOOKING: ${req.body.event_type} - ${req.body.name}`,
             text: `
 Hello Jafe Decor Team!
-
 You have just received a new booking reservation. Here are the details:
 
 👤 Name/Organization: ${req.body.name}
@@ -176,7 +175,6 @@ You have just received a new booking reservation. Here are the details:
 📅 Event Type: ${req.body.event_type}
 📆 Date: ${req.body.date}
 👥 Estimated Guests: ${req.body.guests || 'Not specified'}
-
 💳 Debit Account Used: ${req.body.debit_account}
 
 📝 Special Details: 
@@ -186,24 +184,20 @@ Check your MongoDB Atlas dashboard for full records.
             `
         };
 
-        // 3. Send the Email AND WAIT for it to finish (Crucial for Vercel)
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             try {
-                await transporter.sendMail(mailOptions); // <-- The 'await' is what fixes it!
+                await transporter.sendMail(mailOptions);
                 console.log("✅ Email sent successfully!");
             } catch (emailError) {
                 console.error("❌ Email failed to send:", emailError.message);
             }
-        } else {
-            console.error("⚠️ EMAIL Variables are missing in Vercel settings!");
         }
-
-        // 4. Respond to the user immediately after the email finishes
         res.status(201).json({ success: true }); 
     } 
     catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// OTHER FORMS
 app.post('/backend/submit-contact', async (req, res) => {
     try { await new Contact(req.body).save(); res.status(201).json({ success: true }); } 
     catch (err) { res.status(500).json({ success: false, message: err.message }); }
