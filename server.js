@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs'); 
-const nodemailer = require('nodemailer'); // <-- NEW: The Email Tool
+const nodemailer = require('nodemailer'); 
 require('dotenv').config();
 
 const app = express();
@@ -29,8 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER, // Your Gmail address from Vercel
-        pass: process.env.EMAIL_PASS  // Your 16-letter App Password from Vercel
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS  
     }
 });
 
@@ -126,10 +126,10 @@ app.post('/backend/login', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// 👉 THIS IS WHERE THE EMAIL HAPPENS!
+// 👉 THE FIXED EMAIL NOTIFICATION ROUTE
 app.post('/backend/submit-booking', async (req, res) => {
     try { 
-        // 1. Save to Database
+        // 1. Save to Database FIRST
         await new Booking(req.body).save(); 
         
         // 2. Draft the Email
@@ -155,19 +155,23 @@ You have just received a new booking reservation. Here are the details:
 📝 Special Details: 
 ${req.body.details || 'No additional details provided.'}
 
-Check your MongoDB Atlas dashboard for full records || Project Created By Urji Abdurahman.
+Check your MongoDB Atlas dashboard for full records.
             `
         };
 
-        // 3. Send the Email (Fire and forget, so the user doesn't have to wait)
+        // 3. Send the Email AND WAIT for it to finish (Crucial for Vercel)
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) console.error("Email failed to send:", error);
-                else console.log("Email sent successfully!");
-            });
+            try {
+                await transporter.sendMail(mailOptions); // <-- The 'await' is what fixes it!
+                console.log("✅ Email sent successfully!");
+            } catch (emailError) {
+                console.error("❌ Email failed to send:", emailError.message);
+            }
+        } else {
+            console.error("⚠️ EMAIL Variables are missing in Vercel settings!");
         }
 
-        // 4. Respond to the user immediately
+        // 4. Respond to the user immediately after the email finishes
         res.status(201).json({ success: true }); 
     } 
     catch (err) { res.status(500).json({ success: false, message: err.message }); }
