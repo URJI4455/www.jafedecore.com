@@ -126,6 +126,33 @@ app.post('/backend/login', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// 👉 NEW: FORGOT / RESET PASSWORD ROUTE
+app.post('/backend/reset-password', async (req, res) => {
+    try {
+        const { phone, first_name, new_password } = req.body;
+        
+        // 1. Find user by phone
+        const user = await User.findOne({ phone: phone });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "No account found with this phone number." });
+        }
+
+        // 2. Security Check: Does the first name match? (case insensitive)
+        if (user.first_name.toLowerCase() !== first_name.toLowerCase()) {
+            return res.status(401).json({ success: false, message: "Security verification failed. First name does not match." });
+        }
+
+        // 3. Hash the new password and save it
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(new_password, salt);
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Password reset successfully." });
+    } catch (err) { 
+        res.status(500).json({ success: false, message: "Server error. Please try again later." }); 
+    }
+});
+
 // 👉 THE FIXED EMAIL NOTIFICATION ROUTE
 app.post('/backend/submit-booking', async (req, res) => {
     try { 
