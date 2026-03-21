@@ -200,11 +200,121 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else throw new Error(result.message);
             } catch (err) {
                 alert(err.message || 'Invalid credentials.');
+// 7. Dynamic Header (Login vs Logout Button)
+    const isLoggedIn = localStorage.getItem('jafe_logged_in') === 'true';
+    const authLinks = document.querySelectorAll('a[href="login.html"]'); // Find all login buttons
+    
+    if (isLoggedIn) {
+        authLinks.forEach(link => {
+            link.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+            link.href = '#'; // Remove the link to login.html
+            link.style.color = '#D32F2F'; // Make it red to indicate logout
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('jafe_logged_in'); // Clear memory
+                window.location.href = 'index.html'; // Kick them to home page
+            });
+        });
+    }
+
+    // 8. Auth Forms (Login/Register/Reset)
+    const togglePasswords = document.querySelectorAll('.toggle-password');
+    if(togglePasswords.length > 0) {
+        togglePasswords.forEach(icon => {
+            icon.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                if(input.type === 'password') { input.type = 'text'; this.classList.replace('fa-eye', 'fa-eye-slash'); } 
+                else { input.type = 'password'; this.classList.replace('fa-eye-slash', 'fa-eye'); }
+            });
+        });
+    }
+
+    // LOGIN LOGIC (With beautiful inline errors)
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    if(loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            loginError.style.display = 'none'; // Hide error box on new attempt
+
+            const phone = document.getElementById('login_phone').value;
+            if(!/^\+2519\d{8}$/.test(phone)) {
+                loginError.innerText = 'Please enter a valid Ethiopian phone number (+2519...)';
+                loginError.style.display = 'block';
+                return;
+            }
+
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            submitBtn.innerText = 'Verifying...'; submitBtn.disabled = true;
+
+            const data = Object.fromEntries(new FormData(loginForm));
+            try {
+                const res = await fetch(`${API_BASE_URL}/backend/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                
+                if (res.ok && result.success) {
+                    localStorage.setItem('jafe_logged_in', 'true'); 
+                    window.location.href = 'booking.html'; // Success!
+                } else throw new Error(result.message);
+            } catch (err) {
+                // Show professional inline error!
+                loginError.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${err.message || 'Invalid phone number or password.'}`;
+                loginError.style.display = 'block';
                 submitBtn.innerText = 'Secure Login'; submitBtn.disabled = false;
             }
         });
     }
 
+    // RESET PASSWORD LOGIC
+    const resetForm = document.getElementById('resetForm');
+    const resetError = document.getElementById('resetError');
+    const resetSuccess = document.getElementById('resetSuccess');
+    if(resetForm) {
+        resetForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            resetError.style.display = 'none';
+
+            const phone = document.getElementById('reset_phone').value;
+            const newPass = document.getElementById('new_password').value;
+            const confirmPass = document.getElementById('confirm_password').value;
+
+            if(!/^\+2519\d{8}$/.test(phone)) {
+                resetError.innerText = 'Please enter a valid Ethiopian phone number (+2519...)';
+                resetError.style.display = 'block';
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                resetError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Passwords do not match!';
+                resetError.style.display = 'block';
+                return;
+            }
+
+            const submitBtn = resetForm.querySelector('button[type="submit"]');
+            submitBtn.innerText = 'Resetting...'; submitBtn.disabled = true;
+
+            const data = Object.fromEntries(new FormData(resetForm));
+            try {
+                const res = await fetch(`${API_BASE_URL}/backend/reset-password`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                
+                if (res.ok && result.success) {
+                    resetForm.style.display = 'none';
+                    resetSuccess.style.display = 'block';
+                } else throw new Error(result.message);
+            } catch (err) {
+                resetError.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${err.message || 'Error resetting password.'}`;
+                resetError.style.display = 'block';
+                submitBtn.innerText = 'Reset Password'; submitBtn.disabled = false;
+            }
+        });
+    }
+
+    // REGISTER LOGIC (With inline errors)
     const registerForm = document.getElementById('registerForm');
     if(registerForm) {
         registerForm.addEventListener('submit', async function(e) {
@@ -228,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitBtn.innerText = 'Register & Proceed'; submitBtn.disabled = false;
             }
         });
-    }
+        }
 
     // 8. Booking Form Logic & Auth Protection
     const bookingForm = document.getElementById('bookingForm');
