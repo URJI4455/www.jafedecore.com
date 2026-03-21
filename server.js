@@ -15,33 +15,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
-// 2. DATABASE CRASH PROTECTION
+// 2. DATABASE CONNECTION
 // ==========================================
 const connectDB = async () => {
     if (mongoose.connections[0].readyState) return true;
     try {
         if (!process.env.MONGO_URI) {
-            console.error('❌ CRITICAL ERROR: MONGO_URI is missing in Vercel Environment Variables!');
+            console.error('❌ MONGO_URI is missing!');
             return false;
         }
         await mongoose.connect(process.env.MONGO_URI);
-        console.log('✅ MongoDB Atlas Connected Successfully');
+        console.log('✅ MongoDB Connected');
         return true;
     } catch (err) {
-        console.error('❌ MongoDB Connection Error:', err.message);
+        console.error('❌ MongoDB Error:', err.message);
         return false;
     }
 };
 
-// Check DB before processing routes
 app.use('/backend', async (req, res, next) => {
     const isConnected = await connectDB();
-    if (!isConnected) {
-        return res.status(500).json({ 
-            success: false, 
-            message: "Server Error: Database not connected. Check Vercel MONGO_URI settings." 
-        });
-    }
+    if (!isConnected) return res.status(500).json({ success: false, message: "Database not connected." });
     next();
 });
 
@@ -59,48 +53,40 @@ const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema(
 }, { timestamps: true }));
 
 const Booking = mongoose.models.Booking || mongoose.model('Booking', new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: true },
-    event_type: { type: String, required: true },
-    date: { type: String, required: true },
-    guests: { type: Number },
-    details: { type: String },
-    debit_account: { type: String, required: true }
+    name: { type: String, required: true }, email: { type: String, required: true }, phone: { type: String, required: true },
+    event_type: { type: String, required: true }, date: { type: String, required: true }, guests: { type: Number },
+    details: { type: String }, debit_account: { type: String, required: true }
 }, { timestamps: true }));
 
 const Contact = mongoose.models.Contact || mongoose.model('Contact', new mongoose.Schema({
-    contact_name: { type: String, required: true },
-    contact_email: { type: String, required: true },
-    message: { type: String, required: true }
+    contact_name: { type: String, required: true }, contact_email: { type: String, required: true }, message: { type: String, required: true }
 }, { timestamps: true }));
 
 const Affiliate = mongoose.models.Affiliate || mongoose.model('Affiliate', new mongoose.Schema({
-    aff_name: { type: String, required: true },
-    company: { type: String },
-    aff_email: { type: String, required: true },
-    promo_method: { type: String, required: true }
+    aff_name: { type: String, required: true }, company: { type: String }, aff_email: { type: String, required: true }, promo_method: { type: String, required: true }
 }, { timestamps: true }));
 
 const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', new mongoose.Schema({
-    name: { type: String, required: true },
-    rating: { type: Number, required: true },
-    feedback: { type: String, required: true }
+    name: { type: String, required: true }, rating: { type: Number, required: true }, feedback: { type: String, required: true }
 }, { timestamps: true }));
 
 // ==========================================
 // 4. API ENDPOINTS
 // ==========================================
+
+// 👉 THIS FIXES YOUR SCREENSHOT ISSUE! 
+app.get('/', (req, res) => {
+    res.send("<h1>✅ Jafe Decor Backend is LIVE and Running!</h1><p>Your frontend on GitHub Pages is now ready to send data here.</p>");
+});
+
 app.get('/backend/ping', (req, res) => res.status(200).json({ message: "Server is online and DB connected!" }));
 
 app.post('/backend/register', async (req, res) => {
     try {
         const existingUser = await User.findOne({ phone: req.body.phone });
         if (existingUser) return res.status(400).json({ success: false, message: "Phone already registered." });
-
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
-
         await new User({ ...req.body, password: hashedPassword }).save();
         res.status(201).json({ success: true });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -110,7 +96,6 @@ app.post('/backend/login', async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.body.phone });
         if (!user) return res.status(401).json({ success: false, message: "Invalid credentials." });
-
         const isMatch = await bcrypt.compare(req.body.password, user.password);
         if (isMatch) res.status(200).json({ success: true });
         else res.status(401).json({ success: false, message: "Invalid credentials." });
