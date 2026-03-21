@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs'); 
 require('dotenv').config();
@@ -7,33 +6,39 @@ require('dotenv').config();
 const app = express();
 
 // ==========================================
-// 1. SECURITY & CORS
+// 1. BULLETPROOF CORS & SECURITY HEADERS
 // ==========================================
-app.use(cors({ origin: '*' }));
-app.options('*', cors()); 
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow any frontend
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    // Automatically intercept & approve browser preflight "OPTIONS" requests
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
 // 2. VERCEL SERVERLESS DB CONNECTION
 // ==========================================
-// This "cached" method is required by Vercel to stop ghost connections
 let cached = global.mongoose;
 if (!cached) {
     cached = global.mongoose = { conn: null, promise: null };
 }
 
 const connectDB = async () => {
-    if (cached.conn) {
-        return true; // Already connected!
-    }
+    if (cached.conn) return true;
     if (!process.env.MONGO_URI) {
         console.error('❌ MONGO_URI is missing!');
         return false;
     }
     try {
         if (!cached.promise) {
-            // Added a 5-second timeout. If MongoDB blocks the IP, it fails cleanly.
             cached.promise = mongoose.connect(process.env.MONGO_URI, {
                 serverSelectionTimeoutMS: 5000 
             }).then(mongoose => mongoose);
@@ -43,7 +48,7 @@ const connectDB = async () => {
         return true;
     } catch (err) {
         console.error('❌ MongoDB Connection Error:', err.message);
-        cached.promise = null; // Reset so it can try again
+        cached.promise = null;
         return false;
     }
 };
@@ -64,13 +69,8 @@ app.use('/backend', async (req, res, next) => {
 // 3. MONGODB SCHEMAS
 // ==========================================
 const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
-    first_name: { type: String, required: true },
-    father_name: { type: String, required: true },
-    grandfather_name: { type: String, required: true },
-    email: { type: String },
-    nationality: { type: String, required: true },
-    phone: { type: String, required: true, unique: true },
-    password: { type: String, required: true } 
+    first_name: { type: String, required: true }, father_name: { type: String, required: true }, grandfather_name: { type: String, required: true },
+    email: { type: String }, nationality: { type: String, required: true }, phone: { type: String, required: true, unique: true }, password: { type: String, required: true } 
 }, { timestamps: true }));
 
 const Booking = mongoose.models.Booking || mongoose.model('Booking', new mongoose.Schema({
@@ -94,9 +94,7 @@ const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', new mong
 // ==========================================
 // 4. API ENDPOINTS
 // ==========================================
-app.get('/', (req, res) => {
-    res.send("<h1>✅ Jafe Decor Backend is LIVE!</h1>");
-});
+app.get('/', (req, res) => res.send("<h1>✅ Jafe Decor Backend is LIVE!</h1>"));
 
 app.get('/backend/ping', (req, res) => res.status(200).json({ message: "Server is online and DB connected!" }));
 
