@@ -15,27 +15,48 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
-// 2. DATABASE CONNECTION
+// 2. VERCEL SERVERLESS DB CONNECTION
 // ==========================================
+// This "cached" method is required by Vercel to stop ghost connections
+let cached = global.mongoose;
+if (!cached) {
+    cached = global.mongoose = { conn: null, promise: null };
+}
+
 const connectDB = async () => {
-    if (mongoose.connections[0].readyState) return true;
+    if (cached.conn) {
+        return true; // Already connected!
+    }
+    if (!process.env.MONGO_URI) {
+        console.error('❌ MONGO_URI is missing!');
+        return false;
+    }
     try {
-        if (!process.env.MONGO_URI) {
-            console.error('❌ MONGO_URI is missing!');
-            return false;
+        if (!cached.promise) {
+            // Added a 5-second timeout. If MongoDB blocks the IP, it fails cleanly.
+            cached.promise = mongoose.connect(process.env.MONGO_URI, {
+                serverSelectionTimeoutMS: 5000 
+            }).then(mongoose => mongoose);
         }
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log('✅ MongoDB Connected');
+        cached.conn = await cached.promise;
+        console.log('✅ MongoDB Connected Successfully');
         return true;
     } catch (err) {
-        console.error('❌ MongoDB Error:', err.message);
+        console.error('❌ MongoDB Connection Error:', err.message);
+        cached.promise = null; // Reset so it can try again
         return false;
     }
 };
 
+// Check DB before processing routes
 app.use('/backend', async (req, res, next) => {
     const isConnected = await connectDB();
-    if (!isConnected) return res.status(500).json({ success: false, message: "Database not connected." });
+    if (!isConnected) {
+        return res.status(500).json({ 
+            success: false, 
+            message: "Database connection failed. Please ensure MongoDB Network Access is set to 0.0.0.0/0" 
+        });
+    }
     next();
 });
 
@@ -73,10 +94,8 @@ const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', new mong
 // ==========================================
 // 4. API ENDPOINTS
 // ==========================================
-
-// 👉 THIS FIXES YOUR SCREENSHOT ISSUE! 
 app.get('/', (req, res) => {
-    res.send("<h1>✅ Jafe Decor Backend is LIVE and Running!</h1><p>Your frontend on GitHub Pages is now ready to send data here.</p>");
+    res.send("<h1>✅ Jafe Decor Backend is LIVE!</h1>");
 });
 
 app.get('/backend/ping', (req, res) => res.status(200).json({ message: "Server is online and DB connected!" }));
