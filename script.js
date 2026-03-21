@@ -7,7 +7,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelector('.nav-links');
     if (menuToggle) menuToggle.addEventListener('click', () => { navLinks.classList.toggle('active'); });
 
-    // 2. Animated Counters
+    // 👉 2. DYNAMIC HEADER (LOGOUT SYSTEM)
+    const isLoggedIn = localStorage.getItem('jafe_logged_in') === 'true';
+    const authLinks = document.querySelectorAll('a[href="login.html"]'); 
+    
+    if (isLoggedIn) {
+        authLinks.forEach(link => {
+            link.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+            link.href = '#'; 
+            link.style.color = '#D32F2F'; // Brand Red
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('jafe_logged_in'); 
+                window.location.href = 'index.html'; // Kick them to home page
+            });
+        });
+    }
+
+    // 3. Animated Counters
     const counters = document.querySelectorAll('.counter-value');
     if(counters.length > 0) {
         const observeCounters = new IntersectionObserver(entries => {
@@ -31,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         counters.forEach(c => observeCounters.observe(c));
     }
 
-    // 3. FIXED FAQ Accordion
+    // 4. FAQ Accordion
     const faqItems = document.querySelectorAll('.faq-question');
     if(faqItems.length > 0) {
         faqItems.forEach(item => {
@@ -41,31 +58,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const icon = item.querySelector('i');
                 const isOpen = parent.classList.contains('active');
                 
-                // Close all others
                 document.querySelectorAll('.faq-item').forEach(faq => {
                     faq.classList.remove('active');
                     faq.querySelector('.faq-answer').style.maxHeight = null;
                     const faqIcon = faq.querySelector('.faq-question i');
-                    if(faqIcon) {
-                        faqIcon.classList.remove('fa-minus');
-                        faqIcon.classList.add('fa-plus');
-                    }
+                    if(faqIcon) { faqIcon.classList.remove('fa-minus'); faqIcon.classList.add('fa-plus'); }
                 });
 
-                // Toggle the clicked one
                 if (!isOpen) {
                     parent.classList.add('active');
                     answer.style.maxHeight = answer.scrollHeight + "px";
-                    if(icon) {
-                        icon.classList.remove('fa-plus');
-                        icon.classList.add('fa-minus');
-                    }
+                    if(icon) { icon.classList.remove('fa-plus'); icon.classList.add('fa-minus'); }
                 }
             });
         });
     }
 
-    // 4. Gallery Filtering System
+    // 5. Gallery Filtering System
     const filterBtns = document.querySelectorAll('.filter-btn');
     const galleryItems = document.querySelectorAll('.gallery-item');
     if(filterBtns.length > 0) {
@@ -84,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(defaultFilter) defaultFilter.click();
     }
 
-    // 5. Gallery Read More / Read Less Toggle
+    // 6. Gallery Read More / Read Less
     const readMoreBtns = document.querySelectorAll('.read-more-btn');
     if (readMoreBtns.length > 0) {
         readMoreBtns.forEach(btn => {
@@ -101,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 6. FIXED Star Rating & Feedback Form
+    // 7. Star Rating & Feedback Form
     const stars = document.querySelectorAll('.star-rating i');
     const ratingValue = document.getElementById('ratingValue');
     if (stars.length > 0) {
@@ -109,15 +118,11 @@ document.addEventListener('DOMContentLoaded', () => {
             star.addEventListener('click', function() {
                 let value = parseInt(this.getAttribute('data-val'));
                 ratingValue.value = value;
-                
                 stars.forEach(s => {
-                    let sVal = parseInt(s.getAttribute('data-val'));
-                    if (sVal <= value) {
-                        s.classList.add('active');
-                        s.style.color = '#FFD700'; // Force yellow
+                    if (parseInt(s.getAttribute('data-val')) <= value) {
+                        s.classList.add('active'); s.style.color = '#FFD700'; 
                     } else {
-                        s.classList.remove('active');
-                        s.style.color = '#ddd'; // Force gray
+                        s.classList.remove('active'); s.style.color = '#ddd'; 
                     }
                 });
             });
@@ -139,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
                 });
                 const result = await res.json();
-                
                 if (res.ok && result.success) {
                     feedbackForm.style.display = 'none';
                     feedbackSuccess.style.display = 'block';
@@ -151,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 7. Auth (Login/Register Forms)
+    // 👉 8. AUTHENTICATION (Login, Register, Reset)
     const togglePasswords = document.querySelectorAll('.toggle-password');
     if(togglePasswords.length > 0) {
         togglePasswords.forEach(icon => {
@@ -163,83 +167,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const phoneInputs = document.querySelectorAll('input[type="tel"]');
-    if(phoneInputs.length > 0) {
-        phoneInputs.forEach(input => {
-            input.addEventListener('input', function() {
-                const isValid = /^\+2519\d{8}$/.test(this.value);
-                const errorMsg = this.nextElementSibling;
-                if(this.value.length > 0) {
-                    this.style.borderColor = isValid ? '#2e7d32' : 'red';
-                    if(errorMsg && errorMsg.classList.contains('phone-error')) errorMsg.style.display = isValid ? 'none' : 'block';
-                } else {
-                    this.style.borderColor = '#ddd';
-                    if(errorMsg && errorMsg.classList.contains('phone-error')) errorMsg.style.display = 'none';
-                }
-            });
-        });
-    }
-
-    const loginForm = document.getElementById('loginForm');
-    if(loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const phone = document.getElementById('login_phone').value;
-            if(!/^\+2519\d{8}$/.test(phone)) return alert('Please enter a valid Ethiopian phone number (+2519...)');
-            const submitBtn = loginForm.querySelector('button[type="submit"]');
-            submitBtn.innerText = 'Verifying...'; submitBtn.disabled = true;
-
-            const data = Object.fromEntries(new FormData(loginForm));
-            try {
-                const res = await fetch(`${API_BASE_URL}/backend/login`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (res.ok && result.success) {
-                    localStorage.setItem('jafe_logged_in', 'true'); window.location.href = 'booking.html';
-                } else throw new Error(result.message);
-            } catch (err) {
-                alert(err.message || 'Invalid credentials.');
-// 7. Dynamic Header (Login vs Logout Button)
-    const isLoggedIn = localStorage.getItem('jafe_logged_in') === 'true';
-    const authLinks = document.querySelectorAll('a[href="login.html"]'); // Find all login buttons
-    
-    if (isLoggedIn) {
-        authLinks.forEach(link => {
-            link.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
-            link.href = '#'; // Remove the link to login.html
-            link.style.color = '#D32F2F'; // Make it red to indicate logout
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('jafe_logged_in'); // Clear memory
-                window.location.href = 'index.html'; // Kick them to home page
-            });
-        });
-    }
-
-    // 8. Auth Forms (Login/Register/Reset)
-    const togglePasswords = document.querySelectorAll('.toggle-password');
-    if(togglePasswords.length > 0) {
-        togglePasswords.forEach(icon => {
-            icon.addEventListener('click', function() {
-                const input = this.previousElementSibling;
-                if(input.type === 'password') { input.type = 'text'; this.classList.replace('fa-eye', 'fa-eye-slash'); } 
-                else { input.type = 'password'; this.classList.replace('fa-eye-slash', 'fa-eye'); }
-            });
-        });
-    }
-
-    // LOGIN LOGIC (With beautiful inline errors)
+    // LOGIN (With Beautiful Inline Errors)
     const loginForm = document.getElementById('loginForm');
     const loginError = document.getElementById('loginError');
-    if(loginForm) {
+    if(loginForm && loginError) {
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            loginError.style.display = 'none'; // Hide error box on new attempt
+            loginError.style.display = 'none'; // Hide error box
 
             const phone = document.getElementById('login_phone').value;
             if(!/^\+2519\d{8}$/.test(phone)) {
-                loginError.innerText = 'Please enter a valid Ethiopian phone number (+2519...)';
+                loginError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter a valid Ethiopian phone number (+2519...)';
                 loginError.style.display = 'block';
                 return;
             }
@@ -253,25 +191,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
                 });
                 const result = await res.json();
-                
                 if (res.ok && result.success) {
-                    localStorage.setItem('jafe_logged_in', 'true'); 
-                    window.location.href = 'booking.html'; // Success!
+                    localStorage.setItem('jafe_logged_in', 'true'); window.location.href = 'booking.html';
                 } else throw new Error(result.message);
             } catch (err) {
-                // Show professional inline error!
-                loginError.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${err.message || 'Invalid phone number or password.'}`;
+                loginError.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${err.message || 'Invalid credentials.'}`;
                 loginError.style.display = 'block';
                 submitBtn.innerText = 'Secure Login'; submitBtn.disabled = false;
             }
         });
     }
 
-    // RESET PASSWORD LOGIC
+    // FORGOT / RESET PASSWORD LOGIC
     const resetForm = document.getElementById('resetForm');
     const resetError = document.getElementById('resetError');
     const resetSuccess = document.getElementById('resetSuccess');
-    if(resetForm) {
+    if(resetForm && resetError && resetSuccess) {
         resetForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             resetError.style.display = 'none';
@@ -281,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const confirmPass = document.getElementById('confirm_password').value;
 
             if(!/^\+2519\d{8}$/.test(phone)) {
-                resetError.innerText = 'Please enter a valid Ethiopian phone number (+2519...)';
+                resetError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter a valid Ethiopian phone number (+2519...)';
                 resetError.style.display = 'block';
                 return;
             }
@@ -314,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // REGISTER LOGIC (With inline errors)
+    // REGISTER LOGIC
     const registerForm = document.getElementById('registerForm');
     if(registerForm) {
         registerForm.addEventListener('submit', async function(e) {
@@ -338,12 +273,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitBtn.innerText = 'Register & Proceed'; submitBtn.disabled = false;
             }
         });
-        }
+    }
 
-    // 8. Booking Form Logic & Auth Protection
+    // 9. Booking Form Logic & Auth Protection
     const bookingForm = document.getElementById('bookingForm');
     if (bookingForm) {
-        const isLoggedIn = localStorage.getItem('jafe_logged_in') === 'true';
         if(!isLoggedIn) {
             const container = bookingForm.parentElement;
             container.innerHTML = `
@@ -390,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 9. General Forms (Contact & Affiliate)
+    // 10. General Forms (Contact & Affiliate)
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
         contactForm.addEventListener('submit', async function(e) {
