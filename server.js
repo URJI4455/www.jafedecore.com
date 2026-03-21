@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs'); 
+const nodemailer = require('nodemailer'); // <-- NEW: The Email Tool
 require('dotenv').config();
 
 const app = express();
@@ -9,11 +10,10 @@ const app = express();
 // 1. BULLETPROOF CORS & SECURITY HEADERS
 // ==========================================
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow any frontend
+    res.setHeader('Access-Control-Allow-Origin', '*'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     
-    // Automatically intercept & approve browser preflight "OPTIONS" requests
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
@@ -24,7 +24,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ==========================================
-// 2. VERCEL SERVERLESS DB CONNECTION
+// 2. EMAIL TRANSPORTER SETUP
+// ==========================================
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER, // Your Gmail address from Vercel
+        pass: process.env.EMAIL_PASS  // Your 16-letter App Password from Vercel
+    }
+});
+
+// ==========================================
+// 3. VERCEL SERVERLESS DB CONNECTION
 // ==========================================
 let cached = global.mongoose;
 if (!cached) {
@@ -53,20 +64,16 @@ const connectDB = async () => {
     }
 };
 
-// Check DB before processing routes
 app.use('/backend', async (req, res, next) => {
     const isConnected = await connectDB();
     if (!isConnected) {
-        return res.status(500).json({ 
-            success: false, 
-            message: "Database connection failed. Please ensure MongoDB Network Access is set to 0.0.0.0/0" 
-        });
+        return res.status(500).json({ success: false, message: "Database connection failed." });
     }
     next();
 });
 
 // ==========================================
-// 3. MONGODB SCHEMAS
+// 4. MONGODB SCHEMAS
 // ==========================================
 const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
     first_name: { type: String, required: true }, father_name: { type: String, required: true }, grandfather_name: { type: String, required: true },
@@ -92,7 +99,7 @@ const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', new mong
 }, { timestamps: true }));
 
 // ==========================================
-// 4. API ENDPOINTS
+// 5. API ENDPOINTS
 // ==========================================
 app.get('/', (req, res) => res.send("<h1>✅ Jafe Decor Backend is LIVE!</h1>"));
 
@@ -119,8 +126,50 @@ app.post('/backend/login', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// 👉 THIS IS WHERE THE EMAIL HAPPENS!
 app.post('/backend/submit-booking', async (req, res) => {
-    try { await new Booking(req.body).save(); res.status(201).json({ success: true }); } 
+    try { 
+        // 1. Save to Database
+        await new Booking(req.body).save(); 
+        
+        // 2. Draft the Email
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: process.env.EMAIL_USER, // Sends an email to YOURSELF
+            subject: `🎉 NEW BOOKING: ${req.body.event_type} - ${req.body.name}`,
+            text: `
+Hello Jafe Decor Team!
+
+You have just received a new booking reservation. Here are the details:
+
+👤 Name/Organization: ${req.body.name}
+📞 Phone: ${req.body.phone}
+✉️ Email: ${req.body.email}
+
+📅 Event Type: ${req.body.event_type}
+📆 Date: ${req.body.date}
+👥 Estimated Guests: ${req.body.guests || 'Not specified'}
+
+💳 Debit Account Used: ${req.body.debit_account}
+
+📝 Special Details: 
+${req.body.details || 'No additional details provided.'}
+
+Check your MongoDB Atlas dashboard for full records || Project Created By Urji Abdurahman.
+            `
+        };
+
+        // 3. Send the Email (Fire and forget, so the user doesn't have to wait)
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) console.error("Email failed to send:", error);
+                else console.log("Email sent successfully!");
+            });
+        }
+
+        // 4. Respond to the user immediately
+        res.status(201).json({ success: true }); 
+    } 
     catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
