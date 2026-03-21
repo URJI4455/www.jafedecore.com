@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelector('.nav-links');
     if (menuToggle) menuToggle.addEventListener('click', () => { navLinks.classList.toggle('active'); });
 
-    // 👉 2. DYNAMIC HEADER (LOGOUT SYSTEM)
+    // 2. DYNAMIC HEADER (LOGOUT SYSTEM)
     const isLoggedIn = localStorage.getItem('jafe_logged_in') === 'true';
     const authLinks = document.querySelectorAll('a[href="login.html"]'); 
     
@@ -15,11 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
         authLinks.forEach(link => {
             link.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
             link.href = '#'; 
-            link.style.color = '#D32F2F'; // Brand Red
+            link.style.color = '#D32F2F'; 
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 localStorage.removeItem('jafe_logged_in'); 
-                window.location.href = 'index.html'; // Kick them to home page
+                window.location.href = 'index.html'; 
             });
         });
     }
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 👉 8. AUTHENTICATION (Login, Register, Reset)
+    // 8. AUTHENTICATION (Login, Register, Reset)
     const togglePasswords = document.querySelectorAll('.toggle-password');
     if(togglePasswords.length > 0) {
         togglePasswords.forEach(icon => {
@@ -167,15 +167,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // LOGIN (With Beautiful Inline Errors)
+    // REAL-TIME PHONE VALIDATION (Ignores spaces)
+    const phoneInputs = document.querySelectorAll('input[type="tel"]');
+    if(phoneInputs.length > 0) {
+        phoneInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                const phoneWithoutSpaces = this.value.replace(/\s+/g, '');
+                const isValid = /^\+2519\d{8}$/.test(phoneWithoutSpaces);
+                const errorMsg = this.parentElement.querySelector('.phone-error');
+                
+                if(this.value.length > 0) {
+                    this.style.borderColor = isValid ? '#2e7d32' : 'red';
+                    if(errorMsg) errorMsg.style.display = isValid ? 'none' : 'block';
+                } else {
+                    this.style.borderColor = '#ddd';
+                    if(errorMsg) errorMsg.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // LOGIN (Fixes Spaces)
     const loginForm = document.getElementById('loginForm');
     const loginError = document.getElementById('loginError');
     if(loginForm && loginError) {
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            loginError.style.display = 'none'; // Hide error box
+            loginError.style.display = 'none'; 
 
-            const phone = document.getElementById('login_phone').value;
+            // Get phone and strip spaces!
+            const rawPhone = document.getElementById('login_phone').value;
+            const phone = rawPhone.replace(/\s+/g, '');
+
             if(!/^\+2519\d{8}$/.test(phone)) {
                 loginError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter a valid Ethiopian phone number (+2519...)';
                 loginError.style.display = 'block';
@@ -186,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.innerText = 'Verifying...'; submitBtn.disabled = true;
 
             const data = Object.fromEntries(new FormData(loginForm));
+            data.phone = phone; // Override with the space-stripped version
+
             try {
                 const res = await fetch(`${API_BASE_URL}/backend/login`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
@@ -202,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // FORGOT / RESET PASSWORD LOGIC
+    // RESET PASSWORD LOGIC (Fixes Spaces)
     const resetForm = document.getElementById('resetForm');
     const resetError = document.getElementById('resetError');
     const resetSuccess = document.getElementById('resetSuccess');
@@ -211,7 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             resetError.style.display = 'none';
 
-            const phone = document.getElementById('reset_phone').value;
+            // Strip spaces from phone
+            const rawPhone = document.getElementById('reset_phone').value;
+            const phone = rawPhone.replace(/\s+/g, '');
             const newPass = document.getElementById('new_password').value;
             const confirmPass = document.getElementById('confirm_password').value;
 
@@ -231,6 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.innerText = 'Resetting...'; submitBtn.disabled = true;
 
             const data = Object.fromEntries(new FormData(resetForm));
+            data.phone = phone; // Override with space-stripped version
+
             try {
                 const res = await fetch(`${API_BASE_URL}/backend/reset-password`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
@@ -249,17 +278,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // REGISTER LOGIC
+    // REGISTER LOGIC (Fixes Spaces)
     const registerForm = document.getElementById('registerForm');
     if(registerForm) {
         registerForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const phone = document.getElementById('reg_phone').value;
+            
+            const rawPhone = document.getElementById('reg_phone').value;
+            const phone = rawPhone.replace(/\s+/g, '');
+
             if(!/^\+2519\d{8}$/.test(phone)) return alert('Please enter a valid Ethiopian phone number (+2519...)');
             const submitBtn = registerForm.querySelector('button[type="submit"]');
             submitBtn.innerText = 'Creating Account...'; submitBtn.disabled = true;
 
             const data = Object.fromEntries(new FormData(registerForm));
+            data.phone = phone; // Override with space-stripped version
+
             try {
                 const res = await fetch(`${API_BASE_URL}/backend/register`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
