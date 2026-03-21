@@ -1,4 +1,3 @@
-<!-- login.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,7 +24,11 @@
     <section class="section">
         <div class="auth-container">
             <h2 class="section-title" style="margin-bottom: 30px; font-size: 32px;">Welcome Back</h2>
-            <form id="loginForm" action="/api/login" method="POST">
+            
+            <!-- PRO INLINE ERROR MESSAGE BOX -->
+            <div id="loginError" class="error-box"></div>
+
+            <form id="loginForm">
                 <div class="form-group">
                     <label for="login_phone">Phone Number <span class="text-red">*</span></label>
                     <input type="tel" id="login_phone" name="phone" required placeholder="+2519XXXXXXXX">
@@ -40,9 +43,13 @@
                 
                 <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 16px;">Secure Login</button>
             </form>
-            <a href="register.html" class="auth-link">Don't have an account? Register now</a>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="reset.html" class="auth-link" style="margin-bottom: 10px; color: #555;">Forgot Password?</a>
+                <a href="register.html" class="auth-link">Don't have an account? Register now</a>
+            </div>
         </div>
     </section>
 
 </body>
-</html>
+                                                                                                                                                </html>
