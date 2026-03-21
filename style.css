@@ -292,3 +292,10 @@ header { background-color: var(--bg-dark); box-shadow: 0 4px 15px rgba(0, 0, 0, 
     .stats-single-box { flex-direction: column; padding: 30px 20px; }
     .stat-item:not(:last-child) { border-right: none; border-bottom: 1px solid #eaeaea; padding-bottom: 25px; margin-bottom: 25px; width: 100%; }
 }
+
+/*  ======================================
+    7. Inline Error Box for Forms 
+    ======================================*/
+.error-box { background-color: #ffebee; color: #c62828; padding: 12px; border-radius: 5px;   text-align: center;  margin-bottom: 20px;   border: 1px solid #ffcdd2;   font-size: 14px;   font-weight: 500;
+    display: none; /* Hidden by default */  animation: fadeIn 0.3s ease-in-out;
+}
