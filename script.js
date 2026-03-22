@@ -1,5 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ==========================================
+    // PWA: SERVICE WORKER REGISTRATION
+    // ==========================================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('✅ PWA Service Worker Registered!'))
+                .catch(err => console.log('❌ PWA SW Registration Failed:', err));
+        });
+    }
+
+
+
+    
+
     const API_BASE_URL = 'https://jafedecore.vercel.app';
 
     // 1. Mobile Menu Toggle
