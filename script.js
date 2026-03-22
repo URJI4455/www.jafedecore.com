@@ -1,13 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==========================================
-    // PWA: SERVICE WORKER REGISTRATION
+    // PWA: AGGRESSIVE SERVICE WORKER REGISTRATION 
     // ==========================================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('✅ PWA Service Worker Registered!'))
+                .then(reg => {
+                    console.log('✅ PWA Service Worker Registered!');
+                    // Force check for updates every time they open the page
+                    reg.update(); 
+                })
                 .catch(err => console.log('❌ PWA SW Registration Failed:', err));
+        });
+
+        // Listen for the "Kick Out" command. If a new version takes over, refresh the page!
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+            }
         });
     }
 
